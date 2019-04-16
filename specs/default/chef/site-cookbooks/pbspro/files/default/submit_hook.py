@@ -100,9 +100,7 @@ def set_select_key(job, key, value):
         job.Resource_List["select"] = pbs.select(":".join(key_values))
 
 
-def placement_hook(hook_config):
-    event = pbs.event()
-    job = event.job
+def placement_hook(hook_config, job):
 
     if not get_select(job):
         # pbs 18 seems to treat host booleans as strings, which is causing this very annoying workaround.
@@ -111,7 +109,7 @@ def placement_hook(hook_config):
             job.Resource_List["slot_type"] = job.Resource_List["slot_type"]
         debug("The job doesn't have a select statement, it doesn't have any placement requirements.")
         debug("Place a hold on the job")
-        e.job.Hold_Types = pbs.hold_types("ns")
+        job.Hold_Types = pbs.hold_types("so")
         return
 
     if validate_groupid_placement(job):
@@ -140,7 +138,9 @@ if pbs.hook_config_filename:
     with open(pbs.hook_config_filename) as fr:
         hook_config.update(json.load(fr))
 try:
-    placement_hook(hook_config)
+    event = pbs.event()
+    job = event.job
+    placement_hook(hook_config, job)
 except:
     error(traceback.format_exc())
     raise
