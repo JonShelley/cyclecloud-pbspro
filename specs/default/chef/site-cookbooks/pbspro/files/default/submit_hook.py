@@ -110,6 +110,8 @@ def placement_hook(hook_config):
         if job.Resource_List["slot_type"]:
             job.Resource_List["slot_type"] = job.Resource_List["slot_type"]
         debug("The job doesn't have a select statement, it doesn't have any placement requirements.")
+        debug("Place a hold on the job")
+        e.job.Hold_Types = pbs.hold_types("ns")
         return
 
     if validate_groupid_placement(job):
