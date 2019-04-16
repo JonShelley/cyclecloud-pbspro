@@ -30,6 +30,7 @@ import sys
 import traceback
 import os
 import subprocess
+import json
 
 try:
     import pbs
@@ -145,15 +146,30 @@ try:
         j = e.job
         placement_hook(hook_config, j)
     elif e.type == pbs.PERIODIC:
+        # Defined paths to PBS commands
         qselect_cmd = os.path.join(pbs.pbs_conf['PBS_EXEC'], 'bin', 'qselect')
+        qstat_cmd = os.path.join(pbs.pbs_conf['PBS_EXEC'], 'bin', 'qstat')
+        qalter_cmd = os.path.join(pbs.pbs_conf['PBS_EXEC'], 'bin', 'qalter')
+        # Get the jobs in an "so" hold state
         cmd = [qselect_cmd, "-h", "so"]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             debug('qselect failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
-        debug("qselect output: %s" % stdout)
         jobs = stdout.split()
         debug("Jobs: %s" % jobs)
+        # Get the job information
+        cmd = [qstat_cmd] + jobs[:25]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            debug('qselect failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
+        qstat_json = json.loads(stdout)
+        jobs = qstat_json["Jobs"]
+
+        for key, value in jobs.iteritems():
+            debug("Key: %s\nValue: %s" % (key, value))
+        #    job_data = e.server.job[job_id]
         # Find jobs with an "so" hold
         #j = e.job
         #placement_hook(hook_config, j)
