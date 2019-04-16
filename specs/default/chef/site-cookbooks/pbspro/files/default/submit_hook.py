@@ -28,6 +28,7 @@ from collections import OrderedDict
 import json
 import sys
 import traceback
+import os
 
 try:
     import pbs
@@ -125,11 +126,11 @@ def placement_hook(hook_config, job):
 
 
 def debug(msg):
-    pbs.logmsg(pbs.LOG_DEBUG, "cycle_sub_hook - %s" % msg)
+    pbs.logmsg(pbs.EVENT_DEBUG, "cycle_sub_hook - %s" % msg)
 
 
 def error(msg):
-    pbs.logmsg(pbs.LOG_ERROR, "cycle_sub_hook - %s" % msg)
+    pbs.logmsg(pbs.EVENT_ERROR, "cycle_sub_hook - %s" % msg)
 
 # another non-pythonic thing - this can't be behind a __name__ == '__main__',
 # as the hook code has to be executable at the load module step.
