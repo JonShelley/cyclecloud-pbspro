@@ -138,9 +138,21 @@ if pbs.hook_config_filename:
     with open(pbs.hook_config_filename) as fr:
         hook_config.update(json.load(fr))
 try:
-    event = pbs.event()
-    job = event.job
-    placement_hook(hook_config, job)
+    e = pbs.event()
+    if e.type == pbs.QUEUEJOB:
+        j = e.job
+        placement_hook(hook_config, j)
+    elif e.type == pbs.PERIODIC:
+        qselect_cmd = os.path.join(pbs.pbs_conf['PBS_EXEC'], 'bin', 'qselect')
+        cmd = [qselect_cmd, "-h", "so"]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            debug('qselect failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
+        debug("qselect output: %s" % stdout)
+        # Find jobs with an "so" hold
+        #j = e.job
+        #placement_hook(hook_config, j)
 except:
     error(traceback.format_exc())
     raise
