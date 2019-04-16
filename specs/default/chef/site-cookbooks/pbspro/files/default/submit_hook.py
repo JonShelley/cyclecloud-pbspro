@@ -29,6 +29,7 @@ import json
 import sys
 import traceback
 import os
+import subprocess
 
 try:
     import pbs
