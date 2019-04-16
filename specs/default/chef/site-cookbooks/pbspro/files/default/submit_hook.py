@@ -152,6 +152,8 @@ try:
         if proc.returncode != 0:
             debug('qselect failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
         debug("qselect output: %s" % stdout)
+        jobs = stdout.split()
+        debug("Jobs: %s" % jobs)
         # Find jobs with an "so" hold
         #j = e.job
         #placement_hook(hook_config, j)
