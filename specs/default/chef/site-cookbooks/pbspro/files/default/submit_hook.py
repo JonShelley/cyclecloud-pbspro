@@ -14,10 +14,20 @@ so you'll see guards against repr(None) (combined with the above) and
 Quick start:
     qmgr -c "create hook cycle_sub_hook"
     qmgr -c "set hook cycle_sub_hook event = queuejob"
+    qmgr -c "create hook cycle_sub_periodic_hook"
+    qmgr -c "set hook cycle_sub_periodic_hook event = periodic"
 
     # reload source / config
     qmgr -c "import hook cycle_sub_hook application/x-python default submit_hook.py"
     qmgr -c "import hook cycle_sub_hook application/x-config default submit_hook.json"
+    qmgr -c "import hook cycle_sub_periodic_hook application/x-python default submit_hook.py"
+    qmgr -c "import hook cycle_sub_periodic_hook application/x-config default submit_hook.json"
+
+Queue setup
+    qmgr -c "set queue <queue_name> resources_default.slot_type = <queue_name>"
+    qmgr -c "set queue <queue_name> resources_default.ungrouped = false"
+    qmgr -c "set queue <queue_name> default_chunk.slot_type = <queue_name>"
+    qmgr -c "set queue <queue_name> default_chunk.ungrouped = false"
 
 See PBS Professional Programmers Guide for detailed information.
 
