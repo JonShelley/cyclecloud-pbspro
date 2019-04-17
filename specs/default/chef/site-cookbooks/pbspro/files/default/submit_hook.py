@@ -195,6 +195,7 @@ try:
             cmd = [qalter_cmd]
             if mj_place != None:
                 debug("New place statement: %s" % mj_place)
+                cmd.append("-lselect=%s" % j_select)
                 cmd.append("-lplace=%s" % mj_place)
                 debug("qalter the job")
                 cmd.append(key)
