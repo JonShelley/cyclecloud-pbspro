@@ -228,6 +228,7 @@ try:
                 _, select_dict = parse_select_statement(j_select)
                 if "ungrouped" not in select_dict:
                     mj_select = set_select_statement_key(j_select, "ungrouped", "false")
+                    debug("set select statement 3: %s" % mj_select)
   
                 slot_type = select_dict.get("slot_type")
                 if slot_type:
