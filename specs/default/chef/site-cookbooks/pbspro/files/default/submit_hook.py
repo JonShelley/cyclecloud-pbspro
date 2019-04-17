@@ -235,14 +235,24 @@ try:
                     mj_select = set_select_statement_key(mj_select, "slot_type", slot_type)
                     debug("Using the grouped slot_type as a resource (%s)." % slot_type)
                 # Qalter the job
+                alter_cmd = [qalter_cmd]
                 if mj_select != None:
                     debug("New select statement: %s" % mj_select)
+                    alter_cmd.append("-lselect")
+                    alter_cmd.append(mj_select)
                 if mj_place != None:
                     debug("New place statement: %s" % mj_place)
+                    alter_cmd.append("-lplace")
+                    alter_cmd.append(mj_place)
                 debug("qalter the job")
+                    alter_cmd.append(key)
+                    debug("%s" % alter_cmd)
 
                 # Release the hold on the job
+                rls_cmd = [qrls_cmd, "-h", "so", key)
                 debug("Release the hold on the job")
+                debug("%s" % rls_cmd)
+            
                 
                 
             
