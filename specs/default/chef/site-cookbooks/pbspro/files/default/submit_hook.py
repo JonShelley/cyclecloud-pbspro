@@ -147,7 +147,7 @@ def placement_hook(hook_config, job):
 
 
 def debug(msg):
-    pbs.logmsg(pbs.EVENT_DEBUG, "cycle_sub_hook - %s" % msg)
+    pbs.logmsg(pbs.EVENT_DEBUG3, "cycle_sub_hook - %s" % msg)
 
 
 def error(msg):
