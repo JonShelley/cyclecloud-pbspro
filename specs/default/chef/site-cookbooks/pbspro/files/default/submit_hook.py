@@ -208,11 +208,14 @@ try:
         jobs = stdout.split()
         debug("Jobs: %s" % jobs)
         # Get the job information
+        if not jobs:
+            debug("No jobs to evaluate")
+            e.accept()
         cmd = [qstat_cmd, "-f", "-F", "json"] + jobs[:25]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
-            debug('qselect failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
+            debug('qstat failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
         #debug(stdout)
         qstat_json = json.loads(stdout)
         jobs = qstat_json["Jobs"]
