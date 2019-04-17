@@ -245,11 +245,11 @@ try:
                     alter_cmd.append("-lplace")
                     alter_cmd.append(mj_place)
                 debug("qalter the job")
-                    alter_cmd.append(key)
-                    debug("%s" % alter_cmd)
+                alter_cmd.append(key)
+                debug("%s" % alter_cmd)
 
                 # Release the hold on the job
-                rls_cmd = [qrls_cmd, "-h", "so", key)
+                rls_cmd = [qrls_cmd, "-h", "so", key]
                 debug("Release the hold on the job")
                 debug("%s" % rls_cmd)
             
