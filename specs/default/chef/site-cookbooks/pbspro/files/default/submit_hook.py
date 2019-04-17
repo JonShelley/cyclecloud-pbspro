@@ -79,14 +79,6 @@ def parse_select(job, select_str=None):
     return select_N, OrderedDict([e.split("=", 1) for e in select_toks[1:]])
 
 
-def parse_select_statement(select_str):
-    # 3:ncpus=2:slot_type=something
-    debug("parse select statement: %s" % select_str)
-    select_toks = select_str.split(":")
-    select_N = int(select_toks[0])
-    return select_N, OrderedDict([e.split("=", 1) for e in select_toks[1:]])
-
-
 def get_select(job):
     debug("Get select: %s" %job.Resource_List["select"])
     return job.Resource_List["select"]
@@ -100,15 +92,6 @@ def append_select_expr(job, key, value):
     select_expr = get_select_expr(job)
     prefix = ":" if select_expr else ""
     job.Resource_List["select"] = pbs.select(select_expr + "%s%s=%s" % (prefix, key, value))
-
-
-def append_select_statement(select_str, key, value):
-    debug("append select statement: %s" % select_str)
-    debug("Key: %s\tValue: %s" % (key, value))
-    prefix = ":" if select_str else ""
-    select_str = select_str + "%s%s=%s" % (prefix, key, value)
-    debug("append select statement 2: %s" % select_str)
-    return select_str
 
 
 def set_select_key(job, key, value):
@@ -127,28 +110,6 @@ def set_select_key(job, key, value):
         append_select_expr(job, key, value)
     else:
         job.Resource_List["select"] = pbs.select(":".join(key_values))
-
-
-def set_select_statement_key(select_str, key, value):
-    debug("set select statement: %s" % select_str)
-    debug("Key: %s\tValue: %s" % (key, value))
-    key_values = select_str.split(":")
-
-    found = False
-
-    for i in range(1, len(key_values)):
-        possible_key, _ = key_values[i].split("=", 1)
-        if possible_key == key:
-            found = True
-            key_values[i] = "%s=%s" % (key, value)
-    
-    if not found:
-        select_str = append_select_statement(select_str, key, value)
-    else:
-        select_str = ":".join(key_values)
-
-    debug("set select statement 2: %s" % select_str)
-    return select_str
 
 
 def placement_hook(hook_config, job):
@@ -182,6 +143,16 @@ def debug(msg):
 def error(msg):
     pbs.logmsg(pbs.EVENT_ERROR, "cycle_sub_hook - %s" % msg)
 
+
+def run_cmd(cmd):
+    debug("Cmd: %s" % cmd)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    if proc.returncode != 0:
+        debug('cmd failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
+    return stdout, stderr
+
+
 # another non-pythonic thing - this can't be behind a __name__ == '__main__',
 # as the hook code has to be executable at the load module step.
 hook_config = {}
@@ -201,10 +172,7 @@ try:
         qrls_cmd = os.path.join(pbs.pbs_conf['PBS_EXEC'], 'bin', 'qrls')
         # Get the jobs in an "so" hold state
         cmd = [qselect_cmd, "-h", "so"]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        if proc.returncode != 0:
-            debug('qselect failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
+        stdout, stderr = run_cmd(cmd)
         jobs = stdout.split()
         debug("Jobs: %s" % jobs)
         # Get the job information
@@ -212,11 +180,7 @@ try:
             debug("No jobs to evaluate")
             e.accept()
         cmd = [qstat_cmd, "-f", "-F", "json"] + jobs[:25]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        if proc.returncode != 0:
-            debug('qstat failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
-        #debug(stdout)
+        stdout, stderr = run_cmd(cmd)
         qstat_json = json.loads(stdout)
         jobs = qstat_json["Jobs"]
         for key, value in jobs.iteritems():
@@ -227,44 +191,19 @@ try:
             # Check the groupid placement
             mj_place = None
             status, mj_place = get_groupid_placement(j_place)
-            if status:
-                mj_select = None
-                _, select_dict = parse_select_statement(j_select)
-                if "ungrouped" not in select_dict:
-                    mj_select = set_select_statement_key(j_select, "ungrouped", "false")
-                    debug("set select statement 3: %s" % mj_select)
-  
-                slot_type = select_dict.get("slot_type")
-                if slot_type:
-                    mj_select = set_select_statement_key(mj_select, "slot_type", slot_type)
-                    debug("Using the grouped slot_type as a resource (%s)." % slot_type)
-                # Qalter the job
-                cmd = [qalter_cmd]
-                if mj_select != None:
-                    debug("New select statement: %s" % mj_select)
-                    cmd.append("-lselect=%s" % mj_select)
-                if mj_place != None:
-                    debug("New place statement: %s" % mj_place)
-                    cmd.append("-lplace=%s" % mj_place)
+            # Qalter the job
+            cmd = [qalter_cmd]
+            if mj_place != None:
+                debug("New place statement: %s" % mj_place)
+                cmd.append("-lplace=%s" % mj_place)
                 debug("qalter the job")
                 cmd.append(key)
-                debug("%s" % cmd)
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                stdout, stderr = proc.communicate()
-                if proc.returncode != 0:
-                    debug('qalter failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
+                stdout, stderr = run_cmd(cmd)
 
-                # Release the hold on the job
-                cmd = [qrls_cmd, "-h", "so", key]
-                debug("Release the hold on the job")
-                debug("%s" % cmd)
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                stdout, stderr = proc.communicate()
-                if proc.returncode != 0:
-                    debug('qrls failed!\n\tstdout="%s"\n\tstderr="%s"' % (stdout, stderr))
-            
-                
-                
+            # Release the hold on the job
+            cmd = [qrls_cmd, "-h", "so", key]
+            debug("Release the hold on the job")
+            stdout, stderr = run_cmd(cmd)
             
 except:
     error(traceback.format_exc())
