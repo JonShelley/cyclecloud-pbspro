@@ -142,7 +142,7 @@ def set_select_statement_key(select_str, key, value):
             key_values[i] = "%s=%s" % (key, value)
     
     if not found:
-        append_select_statement(select_str, key, value)
+        select_str = append_select_statement(select_str, key, value)
     else:
         select_str = ":".join(key_values)
 
