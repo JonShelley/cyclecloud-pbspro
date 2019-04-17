@@ -104,9 +104,9 @@ def append_select_expr(job, key, value):
 def append_select_statement(select_str, key, value):
     debug("append select statement: %s" % select_str)
     debug("Key: %s\tValue: %s" % (key, value))
-    prefix = ":" if select_expr else ""
+    prefix = ":" if select_str else ""
     select_str = select_str + "%s%s=%s" % (prefix, key, value)
-    debug("Append select statement: %s" % select_str)
+    debug("append select statement 2: %s" % select_str)
     return select_str
 
 
@@ -129,7 +129,7 @@ def set_select_key(job, key, value):
 
 
 def set_select_statement_key(select_str, key, value):
-    debug("set  select statement: %s" % select_str)
+    debug("set select statement: %s" % select_str)
     debug("Key: %s\tValue: %s" % (key, value))
     key_values = select_str.split(":")
 
@@ -146,7 +146,7 @@ def set_select_statement_key(select_str, key, value):
     else:
         select_str = ":".join(key_values)
 
-    debug("Append select statement: %s" % select_str)
+    debug("set select statement 2: %s" % select_str)
     return select_str
 
 
@@ -224,8 +224,8 @@ try:
             mj_place = None
             status, mj_place = get_groupid_placement(j_place)
             if status:
-                _, select_dict = parse_select_statement(j_select)
                 mj_select = None
+                _, select_dict = parse_select_statement(j_select)
                 if "ungrouped" not in select_dict:
                     mj_select = set_select_statement_key(j_select, "ungrouped", "false")
   
@@ -234,7 +234,8 @@ try:
                     mj_select = set_select_statement_key(mj_select, "slot_type", slot_type)
                     debug("Using the grouped slot_type as a resource (%s)." % slot_type)
                 # Qalter the job
-                debug("New select statement: %s" % mj_select)
+                if mj_select != None:
+                    debug("New select statement: %s" % mj_select)
                 if mj_place != None:
                     debug("New place statement: %s" % mj_place)
                 debug("qalter the job")
