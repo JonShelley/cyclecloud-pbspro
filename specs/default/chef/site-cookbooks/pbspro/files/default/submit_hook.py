@@ -216,6 +216,8 @@ try:
             debug("Release the hold on the job")
             stdout, stderr = run_cmd(cmd)
             
+except SystemExit:
+    debug("Exited with SystemExit")
 except:
     error(traceback.format_exc())
     raise
