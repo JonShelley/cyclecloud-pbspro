@@ -88,6 +88,7 @@ def parse_select_statement(select_str):
 
 
 def get_select(job):
+    debug("Get select: %s" %job.Resource_List["select"])
     return job.Resource_List["select"]
 
 
