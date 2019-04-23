@@ -130,7 +130,7 @@ def placement_hook(hook_config, job):
         if job.Resource_List["slot_type"]:
             job.Resource_List["slot_type"] = job.Resource_List["slot_type"]
         # Check to see if job is interactive
-        if job.interactive == "True:
+        if job.interactive == "True":
             return
         debug("The job doesn't have a select statement, it doesn't have any placement requirements.")
         debug("Place a hold on the job")
