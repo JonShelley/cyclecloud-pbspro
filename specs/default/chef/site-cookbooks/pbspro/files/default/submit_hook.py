@@ -189,6 +189,11 @@ try:
         if not jobs:
             debug("No jobs to evaluate")
             e.accept()
+        # Get Queue defaults information
+        cmd = [qstat_cmd, "-Qf", "-F", "json"] 
+        stdout, stderr = run_cmd(cmd)
+        qstat_Qf_json = json.loads(stdout)
+        # Get job information
         cmd = [qstat_cmd, "-f", "-F", "json"] + jobs[:25]
         stdout, stderr = run_cmd(cmd)
         qstat_json = json.loads(stdout)
@@ -196,11 +201,16 @@ try:
         for key, value in jobs.iteritems():
             # Reevaluate each held job
             debug("Key: %s\nValue: %s" % (key, value))
+            j_queue = jobs[key]["queue"]
             j_place = jobs[key]["Resource_List"]["place"]
             j_select = jobs[key]["Resource_List"]["select"]
             # Check the groupid placement
-            mj_place = None
-            status, mj_place = get_groupid_placement(j_place)
+            mj_place = "group=group_id"
+            # Assign default placement from queue. If none, assign group=group_id
+            if j_queue in qstat_Qf_json["Queue"]:
+                if "resources_default" in qstat_Qf_json["Queue"][j_queue]:
+                    if "place" in qstat_Qf_json["Queue"][j_queue]["resources_default"]:
+                        mj_place = qstat_Qf_json["Queue"][j_queue]["resources_default"]["place"]
             # Qalter the job
             cmd = [qalter_cmd]
             if mj_place != None:
